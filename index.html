@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical AI Assistant</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f5f7fb;
+            font-family: "Inter", sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .chat-wrapper {
+            width: 100%;
+            max-width: 620px;
+            height: 88vh;
+            background: #ffffff;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #d2d6dc;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 1px solid #e3e3e3;
+        }
+
+        #chatBox {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .msg {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background: #eef1f4;
+            border-left: 3px solid #5a95ff;
+        }
+
+        .user {
+            align-self: flex-end;
+            background: #d7e9ff;
+            border-right: 3px solid #4e93ff;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            border-top: 1px solid #e3e3e3;
+            background: #fafafa;
+        }
+
+        .input-box {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 13px;
+        }
+
+        .send-btn {
+            padding: 10px 16px;
+            background: #4e93ff;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Card formatting for final output */
+        .card {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #dedede;
+            margin-top: 4px;
+        }
+
+        .card-line {
+            margin-bottom: 8px;
+        }
+
+        .card-label {
+            font-weight: 600;
+            color: #2a2a2a;
+        }
+
+        .card-value {
+            margin-top: 2px;
+            color: #444;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-wrapper">
+
+        <div class="header">Medical AI Assistant</div>
+
+        <div id="chatBox"></div>
+
+        <div class="input-area">
+            <input type="text" id="promptInput" placeholder="Describe your symptoms..." class="input-box">
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+
+    </div>
+
+    <script>
+        const chatBox = document.getElementById("chatBox");
+        const input = document.getElementById("promptInput");
+
+        function parseBotOutput(text) {
+            // Clean escaped characters in case backend passed raw text
+            text = text.replace(/\\n/g, "\n").replace(/\\\"/g, "\"");
+
+            // Detect final recommendation
+            if (text.includes("Doctor/Specialty:")) {
+                let lines = text.split("\n");
+
+                let html = `<div class="card">`;
+
+                lines.forEach(line => {
+                    if (line.includes(":")) {
+                        let [label, value] = line.split(":");
+                        html += `
+                            <div class="card-line">
+                                <div class="card-label">${label.trim()}</div>
+                                <div class="card-value">${value.trim()}</div>
+                            </div>`;
+                    }
+                });
+
+                html += `</div>`;
+                return html;
+            }
+
+            // For follow-up questions (Q: ...)
+            if (text.startsWith("Q:")) {
+                return `<div class="card">
+                    <div class="card-label">Follow-up Question</div>
+                    <div class="card-value">${text.replace("Q:", "").trim()}</div>
+                </div>`;
+            }
+
+            return text; // normal text
+        }
+
+        function addMessage(content, sender) {
+            const div = document.createElement("div");
+            div.className = `msg ${sender}`;
+            div.innerHTML = sender === "bot" ? parseBotOutput(content) : content;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            addMessage(prompt, "user");
+            input.value = "";
+
+            const typing = document.createElement("div");
+            typing.className = "msg bot";
+            typing.innerText = "Typing...";
+            chatBox.appendChild(typing);
+
+            const fd = new FormData();
+            fd.append("prompt", prompt);
+
+            const res = await fetch("/model", { method: "POST", body: fd });
+            const text = await res.text();
+
+            typing.remove();
+            addMessage(text, "bot");
+        }
+    </script>
+
+</body>
+
+</html>
