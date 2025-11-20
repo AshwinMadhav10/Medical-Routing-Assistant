@@ -1,210 +1,496 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical AI Assistant</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical AI Assistant</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    <style>
-        body {
-            margin: 0;
-            background: #f5f7fb;
-            font-family: "Inter", sans-serif;
-            display: flex;
-            justify-content: center;
-            padding: 15px;
-        }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: #ecfdf5; /* light emerald */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
 
-        .chat-wrapper {
-            width: 100%;
-            max-width: 620px;
-            height: 88vh;
-            background: #ffffff;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #d2d6dc;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
+    .app {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      padding: 16px;
+    }
 
-        .header {
-            padding: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            text-align: center;
-            border-bottom: 1px solid #e3e3e3;
-        }
+    .chat-card {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 18px 50px rgba(16, 185, 129, 0.25); /* emerald shadow */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-        #chatBox {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            font-size: 14px;
-        }
+    .chat-header {
+      background: linear-gradient(135deg, #059669, #10b981); /* emerald gradient */
+      color: #ffffff;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-        .msg {
-            max-width: 75%;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 14px;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
+    .chat-header-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
 
-        .bot {
-            align-self: flex-start;
-            background: #eef1f4;
-            border-left: 3px solid #5a95ff;
-        }
+    .chat-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
 
-        .user {
-            align-self: flex-end;
-            background: #d7e9ff;
-            border-right: 3px solid #4e93ff;
-        }
+    .chat-header-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+      background: rgba(255, 255, 255, 0.12);
+    }
 
-        .input-area {
-            display: flex;
-            gap: 8px;
-            padding: 10px;
-            border-top: 1px solid #e3e3e3;
-            background: #fafafa;
-        }
+    .chat-header-main {
+      display: flex;
+      align-items: center;
+    }
 
-        .input-box {
-            flex: 1;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 13px;
-        }
+    .chat-header-right {
+      font-size: 20px;
+      opacity: 0.8;
+    }
 
-        .send-btn {
-            padding: 10px 16px;
-            background: #4e93ff;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 13px;
-            cursor: pointer;
-        }
+    .chat-box {
+      padding: 14px 12px 8px;
+      height: 420px;
+      overflow-y: auto;
+      background: #f0fdf4; /* very light emerald */
+    }
 
-        /* Card formatting for final output */
-        .card {
-            background: white;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #dedede;
-            margin-top: 4px;
-        }
+    .msg-row {
+      display: flex;
+      margin-bottom: 10px;
+      align-items: flex-end;
+      gap: 6px;
+    }
 
-        .card-line {
-            margin-bottom: 8px;
-        }
+    .msg-row.bot {
+      justify-content: flex-start;
+    }
 
-        .card-label {
-            font-weight: 600;
-            color: #2a2a2a;
-        }
+    .msg-row.user {
+      justify-content: flex-end;
+    }
 
-        .card-value {
-            margin-top: 2px;
-            color: #444;
-        }
-    </style>
+    .bubble {
+      max-width: 78%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      white-space: pre-line;
+    }
+
+    .msg-row.bot .bubble {
+      background: #ffffff;
+      border-radius: 18px 18px 18px 6px;
+      border: 1px solid #a7f3d0; /* emerald border */
+      color: #111827;
+    }
+
+    .msg-row.user .bubble {
+      background: #10b981; /* emerald */
+      border-radius: 18px 18px 6px 18px;
+      color: #ffffff;
+    }
+
+    .avatar-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    .avatar-bot {
+      background: #d1fae5;
+      color: #047857;
+    }
+
+    .avatar-user {
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    .input-area {
+      border-top: 1px solid #e5e7eb;
+      padding: 10px 10px 12px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f9fafb;
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    #prompt {
+      border: none;
+      outline: none;
+      flex: 1;
+      font-size: 14px;
+      background: transparent;
+      padding: 6px 0;
+    }
+
+    .icon-btn {
+      border: none;
+      outline: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .icon-btn.mic {
+      color: #059669; /* emerald */
+    }
+
+    .icon-btn.mic.recording {
+      color: #ef4444; /* red when recording */
+      animation: pulse 1s infinite;
+    }
+
+    .send-btn {
+      border: none;
+      outline: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: #10b981; /* emerald */
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .send-btn:active {
+      transform: translateY(1px);
+    }
+
+    .tts-btn {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #047857; /* dark emerald */
+      margin-left: 2px;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Scrollbar */
+    .chat-box::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .chat-box::-webkit-scrollbar-thumb {
+      background: #6ee7b7; /* emerald light */
+      border-radius: 999px;
+    }
+  </style>
 </head>
-
 <body>
-
-    <div class="chat-wrapper">
-
-        <div class="header">Medical AI Assistant</div>
-
-        <div id="chatBox"></div>
-
-        <div class="input-area">
-            <input type="text" id="promptInput" placeholder="Describe your symptoms..." class="input-box">
-            <button class="send-btn" onclick="sendMessage()">Send</button>
+  <div class="app">
+    <div class="chat-card">
+      <div class="chat-header">
+        <div class="chat-header-main">
+          <div class="chat-header-icon">
+            🩺
+          </div>
+          <div class="chat-header-left">
+            <div class="chat-header-title">Medical AI Assistant</div>
+          </div>
         </div>
+        <div class="chat-header-right">⋮</div>
+      </div>
 
+      <div id="chat-box" class="chat-box">
+        <!-- Messages will be injected here -->
+      </div>
+
+      <div class="input-area">
+        <div class="input-wrapper">
+          <button id="micBtn" class="icon-btn mic" title="Record voice">
+            🎤
+          </button>
+          <input
+            id="prompt"
+            type="text"
+            placeholder="Describe your symptoms..."
+            autocomplete="off"
+          />
+        </div>
+        <button id="sendBtn" class="send-btn">
+          <span>Send</span>
+          <span>➤</span>
+        </button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const chatBox = document.getElementById("chatBox");
-        const input = document.getElementById("promptInput");
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const promptInput = document.getElementById("prompt");
+    const sendBtn = document.getElementById("sendBtn");
+    const micBtn = document.getElementById("micBtn");
 
-        function parseBotOutput(text) {
-            // Clean escaped characters in case backend passed raw text
-            text = text.replace(/\\n/g, "\n").replace(/\\\"/g, "\"");
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
 
-            // Detect final recommendation
-            if (text.includes("Doctor/Specialty:")) {
-                let lines = text.split("\n");
+    // Add a message bubble to the chat
+    function addMessage(text, sender, options = {}) {
+      const { withVoiceButton = false } = options;
 
-                let html = `<div class="card">`;
+      const row = document.createElement("div");
+      row.className = `msg-row ${sender}`;
 
-                lines.forEach(line => {
-                    if (line.includes(":")) {
-                        let [label, value] = line.split(":");
-                        html += `
-                            <div class="card-line">
-                                <div class="card-label">${label.trim()}</div>
-                                <div class="card-value">${value.trim()}</div>
-                            </div>`;
-                    }
-                });
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
 
-                html += `</div>`;
-                return html;
-            }
+      if (sender === "bot") {
+        const avatar = document.createElement("div");
+        avatar.className = "avatar-circle avatar-bot";
+        avatar.textContent = "🩺";
+        row.appendChild(avatar);
+        row.appendChild(bubble);
+      } else {
+        row.appendChild(bubble);
+        const avatar = document.createElement("div");
+        avatar.className = "avatar-circle avatar-user";
+        avatar.textContent = "🙂";
+        row.appendChild(avatar);
+      }
 
-            // For follow-up questions (Q: ...)
-            if (text.startsWith("Q:")) {
-                return `<div class="card">
-                    <div class="card-label">Follow-up Question</div>
-                    <div class="card-value">${text.replace("Q:", "").trim()}</div>
-                </div>`;
-            }
+      // ✅ Option A: keep a TTS button for EVERY bot message, do NOT remove old ones
+      if (sender === "bot" && withVoiceButton) {
+        const ttsBtn = document.createElement("button");
+        ttsBtn.className = "tts-btn";
+        ttsBtn.innerHTML = "🔊";
+        ttsBtn.title = "Play response audio";
 
-            return text; // normal text
+        // Right now backend /text_to_speech always plays the latest llm_answer
+        // So all buttons will play the latest answer (backend logic).
+        ttsBtn.addEventListener("click", playTTS);
+
+        row.appendChild(ttsBtn);
+      }
+
+      chatBox.appendChild(row);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return row;
+    }
+
+    // Helper for adding bot messages with TTS
+    function addBotMessage(text) {
+      addMessage(text, "bot", { withVoiceButton: true });
+    }
+
+    // Send text prompt to /model
+    async function sendPrompt() {
+      const prompt = promptInput.value.trim();
+      if (!prompt) return;
+
+      addMessage(prompt, "user");
+      promptInput.value = "";
+
+      const formData = new FormData();
+      formData.append("prompt", prompt);
+
+      try {
+        const res = await fetch("/model", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || "Server error");
         }
 
-        function addMessage(content, sender) {
-            const div = document.createElement("div");
-            div.className = `msg ${sender}`;
-            div.innerHTML = sender === "bot" ? parseBotOutput(content) : content;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        const reply = await res.text();
+        addBotMessage(reply);
+      } catch (err) {
+        addMessage("Error: " + err.message, "bot");
+      }
+    }
+
+    sendBtn.addEventListener("click", sendPrompt);
+    promptInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendPrompt();
+      }
+    });
+
+    // 🎤 Voice recording via mic button
+    micBtn.addEventListener("click", async () => {
+      if (!isRecording) {
+        // Start recording
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            audioChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            sendVoiceToBackend(audioBlob);
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          micBtn.classList.add("recording");
+        } catch (err) {
+          addMessage("Microphone error: " + err.message, "bot");
+        }
+      } else {
+        // Stop recording
+        mediaRecorder.stop();
+        isRecording = false;
+        micBtn.classList.remove("recording");
+      }
+    });
+
+    // Send recorded audio to /speech
+    async function sendVoiceToBackend(blob) {
+      // This is a temporary status message, so NO TTS button here
+      const statusRow = addMessage("🎤 Processing voice...", "bot", {
+        withVoiceButton: false,
+      });
+
+      const formData = new FormData();
+      formData.append("voice", blob, "recording.webm");
+
+      try {
+        const res = await fetch("/speech", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || "Server error");
         }
 
-        async function sendMessage() {
-            const prompt = input.value.trim();
-            if (!prompt) return;
+        const data = await res.json();
 
-            addMessage(prompt, "user");
-            input.value = "";
+        // Remove "Processing voice..." message
+        statusRow.remove();
 
-            const typing = document.createElement("div");
-            typing.className = "msg bot";
-            typing.innerText = "Typing...";
-            chatBox.appendChild(typing);
-
-            const fd = new FormData();
-            fd.append("prompt", prompt);
-
-            const res = await fetch("/model", { method: "POST", body: fd });
-            const text = await res.text();
-
-            typing.remove();
-            addMessage(text, "bot");
+        // Show transcription as user's message (NO voice button)
+        if (data.transcription) {
+          addMessage("You said: " + data.transcription, "user");
         }
-    </script>
 
+        // Show model response with voice button (Option A)
+        if (data.model_response) {
+          addBotMessage(data.model_response);
+        }
+      } catch (err) {
+        statusRow.querySelector(".bubble").textContent =
+          "Error: " + err.message;
+      }
+    }
+
+    // 🔊 Call /text_to_speech and play latest LLM answer
+    async function playTTS() {
+      try {
+        const res = await fetch("/text_to_speech", {
+          method: "POST",
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || "TTS failed");
+        }
+
+        const blob = await res.blob();
+        const audioURL = URL.createObjectURL(blob);
+        const audio = new Audio(audioURL);
+        audio.play();
+      } catch (err) {
+        addMessage("TTS error: " + err.message, "bot");
+      }
+    }
+
+    // Initial welcome message (also with 🔊, Option A)
+    window.addEventListener("load", () => {
+      addBotMessage(
+        "Hi! I'm your medical assistant. Tell me your symptoms or tap the mic to speak."
+      );
+    });
+  </script>
 </body>
-
 </html>

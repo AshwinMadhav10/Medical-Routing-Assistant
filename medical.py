@@ -1,9 +1,11 @@
 from groq import Groq
-from fastapi import FastAPI,Form
+from fastapi import FastAPI,Form,UploadFile,File
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 import os
+from gtts import gTTS
 app=FastAPI()
+
 
 
 chat=[]
@@ -23,6 +25,7 @@ def html():
 
 @app.post("/model")
 def model(prompt:str=Form(...)):
+    global llm_answer
     store_msg("user",prompt)
     load_dotenv()
     APIKEY=os.getenv("APIKEY")
@@ -40,7 +43,7 @@ STATE LOGIC:
 - Never ask the user to repeat symptoms already provided.
 
 FOLLOW-UP QUESTION FORMAT (STRICT):
-Q: <one short clinical question>
+ <one short clinical question>
 
 FINAL RECOMMENDATION FORMAT (STRICT):
 Doctor/Specialty: <doctor type>
@@ -95,7 +98,50 @@ Ask ONE follow-up question → then provide the final recommendation in the stri
         full_answer+=chunk.choices[0].delta.content or ""
     
 
-    
     store_msg("assistant", full_answer)
-
+    
+    llm_answer=full_answer
     return full_answer
+
+
+
+
+@app.post("/speech")
+async def speech_to_text(voice:UploadFile=File(...)):
+    load_dotenv()
+    APIKEY=os.getenv("APIKEY")
+
+
+    client = Groq(api_key=APIKEY)
+    audio=await voice.read()
+
+    
+    transcription = client.audio.transcriptions.create(
+          file=(voice.filename, audio),
+          model="whisper-large-v3-turbo",
+          temperature=0,
+          response_format="verbose_json",
+        )
+        
+    text=transcription.text
+    response=model(text)
+    return {"transcription":text,"model_response":response}
+
+
+
+test_id=[]
+@app.post("/text_to_speech")
+
+def tts():
+    new_id=len(test_id)+1
+    tts = gTTS(llm_answer)
+    file_name=f'audio{new_id}.mp3'
+    tts.save(file_name)
+
+    test_id.append(file_name)
+    return FileResponse(file_name)
+
+
+      
+
+
