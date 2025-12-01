@@ -2,3 +2,4 @@ groq
 fastapi
 python-dotenv
 gtts
+uvicorn
