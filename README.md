@@ -79,6 +79,54 @@ Then open your browser at [http://localhost:8000](http://localhost:8000).
 | `POST` | `/speech` | Accepts an audio file; returns transcription and LLM response |
 | `POST` | `/text_to_speech` | Returns an MP3 of the latest LLM response |
 
+## Screenshots
+
+> **Chat interface** — type or speak your symptoms, receive a specialist recommendation.
+
+| Initial Screen | Follow-up Question | Final Recommendation |
+|---|---|---|
+| ![Initial screen](screenshots/initial.png) | ![Follow-up question](screenshots/followup.png) | ![Recommendation](screenshots/recommendation.png) |
+
+---
+
+## App Flowchart
+
+```mermaid
+flowchart TD
+    A([User opens browser]) --> B[GET / — FastAPI serves index.html]
+    B --> C{Input method}
+
+    C -- Text --> D[User types symptoms]
+    C -- Voice --> E[User clicks 🎤 mic button]
+
+    E --> F[Browser records audio via MediaRecorder]
+    F --> G[POST /speech — audio blob uploaded]
+    G --> H[Groq Whisper STT\nwhisper-large-v3-turbo]
+    H --> I[Transcribed text]
+    I --> D
+
+    D --> J[POST /model — prompt sent as form data]
+    J --> K[Message appended to chat history]
+    K --> L[Groq LLM\nllama-3.3-70b-versatile\n+ system prompt]
+
+    L --> M{First turn?}
+    M -- Yes --> N["LLM responds with\none follow-up Q:"]
+    N --> O[Response shown in chat]
+    O --> P[User answers follow-up]
+    P --> J
+
+    M -- No --> Q["LLM returns final recommendation\nDoctor/Specialty · Reason · Urgency"]
+    Q --> R[Response shown in chat]
+
+    O --> S{User clicks 🔊?}
+    R --> S
+    S -- Yes --> T[POST /text_to_speech]
+    T --> U[gTTS converts latest LLM answer to MP3]
+    U --> V[Browser plays audio]
+```
+
+---
+
 ## Routing Logic
 
 | Symptom | Recommended Specialist | Urgency |
