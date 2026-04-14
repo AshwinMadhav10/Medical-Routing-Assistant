@@ -4,3 +4,5 @@
 !requirements.txt
 !.gitignore
 !README.md
+!screenshots/
+!screenshots/*.png
